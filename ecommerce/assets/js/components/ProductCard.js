@@ -19,7 +19,7 @@ export function renderProductCard(product) {
           <h5 class="card-title">${product.title}</h5>
           <p class="card-text flex-grow-1">${product.description}</p>
           <div class="mt-auto d-flex justify-content-between align-items-center">
-            <span class="fw-bold text-info">$${product.price.toFixed(2)}</span>
+            <span class="fw-bold text-info">GH₵${product.price.toFixed(2)}</span>
             <button
               class="btn btn-primary btn-sm"
               data-add-to-cart

@@ -33,7 +33,7 @@ async function fetchJson(url, options = {}) {
 }
 
 function formatCurrency(value) {
-  return `$${Number(value).toFixed(2)}`;
+  return `GH₵${Number(value).toFixed(2)}`;
 }
 
 function setCheckoutStatus(message, type = "muted") {

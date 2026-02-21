@@ -108,7 +108,7 @@ $queryBase = array_filter([
                 <div><?= htmlspecialchars((string) ($payment['customer_name'] ?? '')) ?></div>
                 <small class="text-muted"><?= htmlspecialchars((string) ($payment['customer_email'] ?? '')) ?></small>
               </td>
-              <td>$<?= number_format((float) $payment['amount'], 2) ?></td>
+              <td>GH₵<?= number_format((float) $payment['amount'], 2) ?></td>
               <td><?= htmlspecialchars((string) $payment['method']) ?></td>
               <td><span class="badge <?= $badgeClass ?>"><?= htmlspecialchars(ucfirst($status)) ?></span></td>
               <td><?= htmlspecialchars((string) ($payment['transaction_ref'] ?? '-')) ?></td>

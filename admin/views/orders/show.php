@@ -37,7 +37,7 @@ $statusBadge = match ($status) {
     <div class="row g-3 mb-4">
       <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body"><strong>Order #</strong><div><?= htmlspecialchars($order['order_number']) ?></div></div></div></div>
       <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body"><strong>Status</strong><div><span class="badge <?= $statusBadge ?>"><?= htmlspecialchars(ucfirst($status)) ?></span></div></div></div></div>
-      <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body"><strong>Total</strong><div>$<?= number_format((float) $order['total_amount'], 2) ?></div></div></div></div>
+      <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body"><strong>Total</strong><div>GH₵<?= number_format((float) $order['total_amount'], 2) ?></div></div></div></div>
       <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body"><strong>Created</strong><div><?= htmlspecialchars((string) ($order['created_at'] ?? '')) ?></div></div></div></div>
       <div class="col-md-4"><div class="card border-0 shadow-sm"><div class="card-body"><strong>Customer</strong><div><?= htmlspecialchars((string) ($order['customer_name'] ?? '')) ?></div></div></div></div>
       <div class="col-md-4"><div class="card border-0 shadow-sm"><div class="card-body"><strong>Email</strong><div><?= htmlspecialchars((string) ($order['customer_email'] ?? '')) ?></div></div></div></div>
@@ -73,8 +73,8 @@ $statusBadge = match ($status) {
             <td><?= (int) $item['id'] ?></td>
             <td><?= htmlspecialchars((string) ($item['product_name'] ?? '')) ?></td>
             <td><?= (int) $item['quantity'] ?></td>
-            <td>$<?= number_format((float) $item['price_at_purchase'], 2) ?></td>
-            <td>$<?= number_format((float) $item['line_total'], 2) ?></td>
+            <td>GH₵<?= number_format((float) $item['price_at_purchase'], 2) ?></td>
+            <td>GH₵<?= number_format((float) $item['line_total'], 2) ?></td>
           </tr>
         <?php endforeach; ?>
       <?php endif; ?>
@@ -110,7 +110,7 @@ $statusBadge = match ($status) {
             <td><?= (int) $payment['id'] ?></td>
             <td><?= htmlspecialchars((string) $payment['method']) ?></td>
             <td><span class="badge <?= $pBadge ?>"><?= htmlspecialchars(ucfirst($pStatus)) ?></span></td>
-            <td>$<?= number_format((float) $payment['amount'], 2) ?></td>
+            <td>GH₵<?= number_format((float) $payment['amount'], 2) ?></td>
             <td><?= htmlspecialchars((string) ($payment['transaction_ref'] ?? '-')) ?></td>
             <td><?= htmlspecialchars((string) ($payment['created_at'] ?? '')) ?></td>
           </tr>

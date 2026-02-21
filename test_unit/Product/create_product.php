@@ -33,7 +33,7 @@ echo "Product created:\n";
 echo "ID: " . $product->getId() . "\n";
 echo "Name: " . $product->getName() . "\n"; 
 echo "Slug: " . $product->getSlug() . "\n";
-echo "Price: $" . $product->getPrice() . "\n";
+echo "Price: GH₵" . $product->getPrice() . "\n";
 echo "Stock: " . $product->getStock() . "\n";
 
 

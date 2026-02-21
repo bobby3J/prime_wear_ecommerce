@@ -31,7 +31,7 @@ $statusBadge = match ($status) {
       <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body"><strong>Status</strong><div><span class="badge <?= $statusBadge ?>"><?= htmlspecialchars(ucfirst($status)) ?></span></div></div></div></div>
       <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body"><strong>Created</strong><div><?= htmlspecialchars($cart['created_at']) ?></div></div></div></div>
       <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body"><strong>Last Updated</strong><div><?= htmlspecialchars($cart['updated_at']) ?></div></div></div></div>
-      <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body"><strong>Subtotal</strong><div>$<?= number_format($subTotal, 2) ?></div></div></div></div>
+      <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body"><strong>Subtotal</strong><div>GH₵<?= number_format($subTotal, 2) ?></div></div></div></div>
       <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body"><strong>Items</strong><div><?= count($items) ?></div></div></div></div>
     </div>
 
@@ -55,9 +55,9 @@ $statusBadge = match ($status) {
           <tr>
             <td><?= (int) $item['id'] ?></td>
             <td><?= htmlspecialchars($item['name']) ?></td>
-            <td>$<?= number_format((float) $item['price'], 2) ?></td>
+            <td>GH₵<?= number_format((float) $item['price'], 2) ?></td>
             <td><?= (int) $item['quantity'] ?></td>
-            <td>$<?= number_format((float) $item['line_total'], 2) ?></td>
+            <td>GH₵<?= number_format((float) $item['line_total'], 2) ?></td>
             <td>
               <?php if (!empty($item['image_url'])): ?>
                 <img src="<?= htmlspecialchars($item['image_url']) ?>" width="50" class="rounded" alt="product">

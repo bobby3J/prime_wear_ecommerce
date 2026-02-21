@@ -54,7 +54,7 @@ Cart page flow:
     <div class="card-body" id="cartSummary">
       <div><strong>Total Items:</strong> 0</div>
       <div><strong>Total Quantity:</strong> 0</div>
-      <div><strong>Sub Total:</strong> $0.00</div>
+      <div><strong>Sub Total:</strong> GH₵0.00</div>
     </div>
   </div>
 

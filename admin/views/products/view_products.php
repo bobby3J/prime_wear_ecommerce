@@ -117,7 +117,7 @@ if ((isset($_GET['created']) && $_GET['created'] == 1) || (isset($_GET['success'
   <!-- Price Range -->
   <!-- Numeric inputs allow quick min/max filtering without a separate modal -->
   <div class="col-md-3 position-relative">
-    <i class="fas fa-dollar-sign position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+    <i class="fas fa-coins position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
     <input
       type="number"
       name="price_min"
@@ -130,7 +130,7 @@ if ((isset($_GET['created']) && $_GET['created'] == 1) || (isset($_GET['success'
   </div>
 
   <div class="col-md-3 position-relative">
-    <i class="fas fa-dollar-sign position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+    <i class="fas fa-coins position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
     <input
       type="number"
       name="price_max"
@@ -238,7 +238,7 @@ if ((isset($_GET['created']) && $_GET['created'] == 1) || (isset($_GET['success'
                     <th>#</th>
                     <th>Product Name</th>
                     <th>Category</th>
-                    <th>Price ($)</th>
+                    <th>Price (GH₵)</th>
                     <th>Stock</th>
                     <th>Image</th>
                     <th>Actions</th>
@@ -255,7 +255,7 @@ if ((isset($_GET['created']) && $_GET['created'] == 1) || (isset($_GET['success'
     <td><?= $product->id ?></td>
     <td><?= htmlspecialchars($product->name) ?></td>
     <td><?= htmlspecialchars($product->categoryName) ?></td>
-    <td>$<?= number_format($product->price, 2) ?></td>
+    <td>GH₵<?= number_format($product->price, 2) ?></td>
     <td><?= (int) $product->stock ?></td>
     <td>
         <?php if ($product->imagePath): ?>
@@ -373,7 +373,7 @@ if ((isset($_GET['created']) && $_GET['created'] == 1) || (isset($_GET['success'
                   </div>
                   <div>
                     <div class="mb-2"><strong>Category:</strong> <?= htmlspecialchars($product->categoryName) ?></div>
-                    <div class="mb-2"><strong>Price:</strong> $<?= number_format($product->price, 2) ?></div>
+                    <div class="mb-2"><strong>Price:</strong> GH₵<?= number_format($product->price, 2) ?></div>
                     <div class="mb-2"><strong>Stock:</strong> <?= (int) $product->stock ?></div>
                     <div><strong>Description:</strong> <?= htmlspecialchars($product->description ?? 'No description') ?></div>
                   </div>

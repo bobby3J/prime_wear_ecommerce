@@ -101,7 +101,7 @@ $queryBase = array_filter([
               <td><?= htmlspecialchars($order['customer_email']) ?></td>
               <td><?= (int) ($order['line_items_count'] ?? 0) ?></td>
               <td><?= (int) ($order['total_quantity'] ?? 0) ?></td>
-              <td>$<?= number_format((float) $order['total_amount'], 2) ?></td>
+              <td>GH₵<?= number_format((float) $order['total_amount'], 2) ?></td>
               <td><span class="badge <?= $badgeClass ?>"><?= htmlspecialchars(ucfirst($status)) ?></span></td>
               <td><?= htmlspecialchars((string) ($order['created_at'] ?? '')) ?></td>
               <td>

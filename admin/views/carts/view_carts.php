@@ -90,7 +90,7 @@ $queryBase = array_filter([
             <td><span class="badge <?= $badge ?>"><?= htmlspecialchars(ucfirst($status)) ?></span></td>
             <td><?= (int) $cart['total_items'] ?></td>
             <td><?= (int) $cart['total_quantity'] ?></td>
-            <td>$<?= number_format((float) $cart['sub_total'], 2) ?></td>
+            <td>GH₵<?= number_format((float) $cart['sub_total'], 2) ?></td>
             <td><?= htmlspecialchars($cart['updated_at']) ?></td>
             <td>
               <a href="/admin/carts/show?id=<?= (int) $cart['id'] ?>" class="btn btn-sm btn-info text-white">
