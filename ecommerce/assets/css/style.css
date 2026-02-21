@@ -1,0 +1,250 @@
+/* Logo */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.logo {
+  width: 70px;
+  height: auto;
+}
+
+.logo1 {
+  height: 40px;
+  object-fit: contain;
+}
+
+
+.admin_image{
+    width: 100px;
+}
+/* Gold tone for branding */
+.text-gold {
+  color: #C8A951 !important;
+}
+
+/* Topbar background and alignment */
+.topbar {
+  font-size: 0.95rem;
+  border-bottom: 1px solid #f1f1f1;
+  position: relative;
+  z-index: 1030;
+}
+
+/* Payment icons styling */
+.payment-icon {
+  width: 40px;
+  height: auto;
+  border-radius: 4px;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.payment-icon:hover {
+  transform: scale(1.1);
+}
+
+
+.slogan {
+  font-style: italic;
+  color: #888;
+}
+
+.bg-gold {
+  background: linear-gradient(90deg, #C8A951, #d4af37, #b8860b);
+  color: white !important;
+}
+
+
+.btn-gold {
+  background-color: #d4af37; /* gold color */
+  border-color: #d4af37;
+  color: white;
+  transition: 0.3s ease;
+}
+
+.btn-gold:hover {
+  background-color: #b89625;
+  border-color: #7e6d33;
+  color: rgb(99, 10, 10);
+}
+
+
+.btn-view {
+  background-color: #333;      /* soft black / dark gray */
+  border-color: #333;
+  color: #fff;
+  transition: 0.3s ease;
+}
+
+.btn-view:hover {
+  background-color: #555;
+  border-color: #555;
+  color: #fff;
+}
+
+
+
+
+/* Reduce navbar height */
+.navbar {
+  padding-top: 0.3rem !important;
+  padding-bottom: 0.3rem !important;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Hover animation when scrolling */
+.navbar.fixed-top:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+
+
+/* Align navbar items */
+.navbar-nav .nav-link,
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  color: white !important;
+}
+
+/* Keep search input text readable on light input background. */
+.navbar form[role="search"] .form-control {
+  color: #212529 !important;
+}
+
+.navbar form[role="search"] .form-control::placeholder {
+  color: #6c757d !important;
+}
+
+.navbar form[role="search"] .btn {
+  color: #fff !important;
+}
+
+/* Sidebar stays below navbar */
+.sidebar {
+  position: sticky;
+  top: 75px; /* matches navbar height */
+  height: calc(100vh - 75px);
+  overflow-y: auto;
+  background-color: #f8f9fa;
+  border-right: 1px solid #ddd;
+}
+
+/* Sidebar links */
+.list-group-item a {
+  text-decoration: none;
+  color: #000;
+}
+
+.list-group-item a:hover {
+  color: #0d6efd;
+}
+
+/* Cards uniform height */
+.card {
+  height: 100%;
+  transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.fixed-img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.col-lg-4,
+.col-md-6 {
+  display: flex;
+}
+
+/* Sidebar Styling */
+.sidebar {
+  border-right: 1px solid #e0e0e0;
+  height: 100%;
+}
+
+/* Category Titles */
+.category-list li {
+  list-style: none;
+}
+
+/* Collapsible toggle hover effect */
+.category-toggle:hover {
+  color: #0d6efd;
+  transition: color 0.2s;
+}
+
+/* Inner list styling */
+.category-list ul li {
+  list-style: none;
+  margin: 4px 0;
+  display: flex;
+  align-items: center;
+}
+
+.category-list ul li a:hover {
+  color: #0d6efd;
+}
+
+
+  /* Smooth open/close transition */
+  .collapse {
+    transition: all 0.3s ease-in-out;
+  }
+
+  /* Add hover pointer for all links */
+  .category-toggle,
+  .collapse li a {
+    cursor: pointer;
+  }
+
+  /* Improve spacing for inner links */
+  .collapse li a {
+    padding-left: 4px;
+    display: inline-block;
+  }
+
+  /* Add hover highlight */
+  .collapse li a:hover {
+    color: #2fa125;
+  }
+
+  /* Adjust chevron rotation */
+  .category-toggle .fa-chevron-down {
+    transition: transform 0.3s ease;
+  }
+
+  .category-toggle.active .fa-chevron-down {
+    transform: rotate(180deg);
+  }
+
+
+
+
+.dropdown-item:hover {
+  color: #0dcaf0; /* light blue hover color */
+  transform: translateX(3px); /* subtle hover shift */
+}
+
+/* Label alignment and icon spacing */
+
+
+
+/* Footer */
+footer {
+  bottom: 0;
+  width: 100%;
+}
+

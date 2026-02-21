@@ -1,0 +1,13 @@
+{
+  "name": "bob/ecommerce-ddd",
+  "type": "project",
+  "autoload": {
+    "psr-4": {
+      "Domain\\": "core/Domain/",
+      "Application\\": "core/Application/",
+      "Infrastructure\\": "core/Infrastructure/",
+      "Core\\": "core/"
+    }
+  },
+  "require": {}
+}
