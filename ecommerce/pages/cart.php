@@ -9,112 +9,71 @@ Cart page flow:
 4) Update/remove actions call:
    - /shared/api/cart/update.php
    - /shared/api/cart/remove.php
-5) Checkout requires confirmation:
-   - customer enters name, phone, street address
-   - clicks confirm button
-   - only then can payment action be triggered
-6) Simulated payment endpoint creates:
-   - orders
-   - order_items
-   - order_delivery_details
-   - payments
-7) After payment, cart is cleared, and badge sync event is emitted.
+5) Checkout button routes user to dedicated checkout page.
 -->
 <div class="container my-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="mb-0">My Cart</h4>
+    <h4 class="mb-0"><i class="fa-solid fa-cart-shopping text-info me-2"></i>My Cart</h4>
     <a href="/ecommerce/index.php?page=home" class="btn btn-sm btn-outline-secondary">Continue Shopping</a>
   </div>
 
-  <div class="card shadow-sm mb-3">
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-striped align-middle mb-0">
-          <thead class="table-light">
-            <tr>
-              <th>Product</th>
-              <th>Unit Price</th>
-              <th>Quantity</th>
-              <th>Line Total</th>
-              <th></th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="cartItemsBody">
-            <tr>
-              <td colspan="6" class="text-center text-muted py-4">Loading cart...</td>
-            </tr>
-          </tbody>
-        </table>
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-striped align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Product</th>
+                  <th>Unit Price</th>
+                  <th>Quantity</th>
+                  <th>Line Total</th>
+                  <th></th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="cartItemsBody">
+                <tr>
+                  <td colspan="6" class="text-center text-muted py-4">Loading cart...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="card shadow-sm">
-    <div class="card-body" id="cartSummary">
-      <div><strong>Total Items:</strong> 0</div>
-      <div><strong>Total Quantity:</strong> 0</div>
-      <div><strong>Sub Total:</strong> GH₵0.00</div>
-    </div>
-  </div>
+    <div class="col-lg-4">
+      <div class="card shadow-sm border-0">
+        <div class="card-body" id="cartSummary">
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <div class="p-3 rounded border bg-light h-100">
+                <div class="small text-muted"><i class="fa-solid fa-box me-1 text-info"></i>Total Items</div>
+                <div class="fs-5 fw-bold">0</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-3 rounded border bg-light h-100">
+                <div class="small text-muted"><i class="fa-solid fa-layer-group me-1 text-info"></i>Quantity</div>
+                <div class="fs-5 fw-bold">0</div>
+              </div>
+            </div>
+          </div>
 
-  <div class="card shadow-sm mt-4">
-    <div class="card-body">
-      <h5 class="mb-3">Checkout Confirmation</h5>
-      <p class="text-muted mb-3">
-        Enter delivery details and confirm before choosing payment.
-      </p>
+          <div class="p-3 rounded border bg-light mb-3 d-flex justify-content-between align-items-center">
+            <span class="text-muted"><i class="fa-solid fa-coins me-1 text-warning"></i>Sub Total</span>
+            <strong class="text-dark fs-5">GH&#8373;0.00</strong>
+          </div>
 
-      <div class="row g-3">
-        <div class="col-md-4">
-          <label class="form-label" for="checkoutName">Full Name</label>
-          <input type="text" class="form-control" id="checkoutName" placeholder="John Doe">
-        </div>
-        <div class="col-md-4">
-          <label class="form-label" for="checkoutPhone">Phone</label>
-          <input type="text" class="form-control" id="checkoutPhone" placeholder="+233 24 000 0000">
-        </div>
-        <div class="col-md-4">
-          <label class="form-label" for="checkoutStreetAddress">Street Address</label>
-          <input type="text" class="form-control" id="checkoutStreetAddress" placeholder="Spintex Road, Accra">
-        </div>
-      </div>
-
-      <div class="d-flex gap-2 mt-3">
-        <button class="btn btn-primary" id="checkoutConfirmBtn" type="button">Confirm Details</button>
-        <span class="text-muted align-self-center" id="checkoutConfirmHint">Confirm to unlock payment.</span>
-      </div>
-
-      <hr class="my-4">
-
-      <h6 class="mb-3">Payment (Simulated for Testing)</h6>
-      <div class="row g-3">
-        <div class="col-md-3">
-          <label class="form-label" for="checkoutPaymentMethod">Method</label>
-          <select class="form-select" id="checkoutPaymentMethod" disabled>
-            <option value="momo">MoMo</option>
-            <option value="bank">Bank</option>
-            <option value="cash_on_delivery">Cash On Delivery</option>
-          </select>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label" for="checkoutSimulateResult">Simulate Result</label>
-          <select class="form-select" id="checkoutSimulateResult" disabled>
-            <option value="successful">Successful</option>
-            <option value="pending">Pending</option>
-            <option value="failed">Failed</option>
-          </select>
-        </div>
-        <div class="col-md-4">
-          <label class="form-label" for="checkoutTransactionRef">Transaction Ref (optional)</label>
-          <input type="text" class="form-control" id="checkoutTransactionRef" placeholder="Auto-generated if empty" disabled>
-        </div>
-        <div class="col-md-2 d-flex align-items-end">
-          <button class="btn btn-success w-100" id="checkoutPayBtn" type="button" disabled>Pay Now</button>
+          <div class="d-flex justify-content-center">
+            <button class="btn btn-primary px-4" id="cartCheckoutBtn" type="button" disabled>
+              <i class="fa-solid fa-credit-card me-2"></i>Checkout (GH&#8373;0.00)
+            </button>
+          </div>
         </div>
       </div>
-
-      <div class="mt-3" id="checkoutStatus"></div>
     </div>
   </div>
 </div>

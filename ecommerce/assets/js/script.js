@@ -10,7 +10,7 @@ Primary responsibilities:
 5) Wire category sidebar interactions.
 */
 
-const categories = [
+const fallbackCategories = [
   {
     id: "menCategory",
     name: "Men's Collection",
@@ -37,12 +37,15 @@ const API = {
   register: "/ecommerce/shared/api/auth/register.php",
   logout: "/ecommerce/shared/api/auth/logout.php",
   cartAdd: "/ecommerce/shared/api/cart/add.php",
-  cartCount: "/ecommerce/shared/api/cart/count.php"
+  cartCount: "/ecommerce/shared/api/cart/count.php",
+  categories: "/ecommerce/shared/api/categories.php"
 };
 
 const authState = {
   customer: null
 };
+const NOTIFICATION_CONTAINER_ID = "appNotifications";
+const NOTIFICATION_VISIBLE_MS = 2800;
 
 async function fetchJson(url, options = {}) {
   // Shared fetch helper used by auth/cart flows.
@@ -65,6 +68,10 @@ function getProfileLink() {
   return document.querySelector(".profile-trigger");
 }
 
+function getCartLink() {
+  return document.querySelector('a[href="/ecommerce/index.php?page=cart"]');
+}
+
 function getCartCountBadge() {
   return document.getElementById("cartCountBadge");
 }
@@ -73,6 +80,104 @@ function setCartCount(count) {
   const badge = getCartCountBadge();
   if (!badge) return;
   badge.textContent = String(count);
+}
+
+function getNotificationContainer() {
+  let container = document.getElementById(NOTIFICATION_CONTAINER_ID);
+  if (container) return container;
+
+  container = document.createElement("div");
+  container.id = NOTIFICATION_CONTAINER_ID;
+  container.className = "position-fixed top-0 start-50 translate-middle-x p-3";
+  container.style.zIndex = "2500";
+  container.style.width = "min(92vw, 460px)";
+  container.style.pointerEvents = "none";
+  document.body.appendChild(container);
+  return container;
+}
+
+function showNotification(message, type = "info") {
+  const classMap = {
+    success: "alert-success",
+    error: "alert-danger",
+    warning: "alert-warning",
+    info: "alert-primary"
+  };
+  const container = getNotificationContainer();
+  const alert = document.createElement("div");
+  alert.className = `alert ${classMap[type] || classMap.info} shadow-sm mb-2 py-2 px-3 d-flex justify-content-between align-items-start`;
+  alert.style.pointerEvents = "auto";
+  alert.role = "alert";
+  const messageNode = document.createElement("span");
+  messageNode.className = "me-2";
+  messageNode.textContent = message;
+
+  const closeButton = document.createElement("button");
+  closeButton.type = "button";
+  closeButton.className = "btn-close ms-2 flex-shrink-0";
+  closeButton.setAttribute("aria-label", "Close notification");
+  closeButton.addEventListener("click", () => {
+    alert.remove();
+  });
+
+  alert.append(messageNode, closeButton);
+  container.appendChild(alert);
+
+  window.setTimeout(() => {
+    alert.classList.add("fade");
+    alert.style.opacity = "0";
+    window.setTimeout(() => alert.remove(), 180);
+  }, NOTIFICATION_VISIBLE_MS);
+}
+
+function buildSidebarCategories(rawCategories = []) {
+  if (!Array.isArray(rawCategories) || rawCategories.length === 0) {
+    return fallbackCategories;
+  }
+
+  const groups = {
+    men: {
+      id: "menCategory",
+      name: "Men's Collection",
+      icon: "fa-solid fa-person",
+      items: []
+    },
+    ladies: {
+      id: "ladiesCategory",
+      name: "Ladies' Collection",
+      icon: "fa-solid fa-person-dress",
+      items: []
+    },
+    unisex: {
+      id: "couplesUnisex",
+      name: "Couples & Unisex",
+      icon: "fa-solid fa-people-arrows",
+      items: []
+    }
+  };
+
+  rawCategories.forEach((category) => {
+    const groupKey = ["men", "ladies", "unisex"].includes(category.group)
+      ? category.group
+      : "unisex";
+
+    groups[groupKey].items.push({
+      label: category.name,
+      value: category.slug || category.name,
+      categoryId: Number(category.id || 0)
+    });
+  });
+
+  return [groups.men, groups.ladies, groups.unisex];
+}
+
+async function fetchStoreCategories() {
+  try {
+    const data = await fetchJson(API.categories, { method: "GET" });
+    return Array.isArray(data.items) ? data.items : [];
+  } catch {
+    return [];
+  }
 }
 
 async function refreshCartCount() {
@@ -243,7 +348,16 @@ async function handleProfileClick(event) {
   renderLoginModal("login");
 }
 
-async function addToCart(productId) {
+async function handleCartClick(event) {
+  if (authState.customer) {
+    return;
+  }
+
+  event.preventDefault();
+  await renderLoginModal("login");
+}
+
+async function addToCart(productId, productName = "") {
   // Enforces authenticated-only cart usage in UI before API call.
   if (!authState.customer) {
     await renderLoginModal("login");
@@ -260,13 +374,20 @@ async function addToCart(productId) {
   });
 
   await refreshCartCount();
+  showNotification(
+    productName ? `${productName} added to cart.` : "Item added to cart.",
+    "success"
+  );
   document.dispatchEvent(new CustomEvent("cart:changed"));
 }
 
-function initCategorySidebar() {
+async function initCategorySidebar() {
   const categoryList = document.querySelector(".category-list");
   if (!categoryList) return;
-  categoryList.innerHTML = categories.map(renderCategory).join("");
+
+  const storeCategories = await fetchStoreCategories();
+  const sidebarCategories = buildSidebarCategories(storeCategories);
+  categoryList.innerHTML = sidebarCategories.map(renderCategory).join("");
 }
 
 function bindGlobalEvents() {
@@ -275,13 +396,37 @@ function bindGlobalEvents() {
     profileLink.addEventListener("click", handleProfileClick);
   }
 
+  const cartLink = getCartLink();
+  if (cartLink) {
+    cartLink.addEventListener("click", (event) => {
+      handleCartClick(event).catch(() => {
+        showNotification("Please login to view your cart.", "warning");
+      });
+    });
+  }
+
   document.body.addEventListener("click", async (event) => {
     const categoryLink = event.target.closest("[data-category]");
     if (categoryLink) {
       event.preventDefault();
       const item = decodeURIComponent(categoryLink.dataset.category || "");
+      const categoryId = Number(categoryLink.dataset.categoryId || 0);
+
       if (window.showProducts) {
-        window.showProducts({ q: item });
+        window.showProducts({
+          category: item,
+          categoryId
+        });
+      } else {
+        const url = new URL("/ecommerce/index.php", window.location.origin);
+        url.searchParams.set("page", "home");
+        if (categoryId > 0) {
+          url.searchParams.set("category_id", String(categoryId));
+        }
+        if (item) {
+          url.searchParams.set("category", item);
+        }
+        window.location.href = url.toString();
       }
       return;
     }
@@ -291,11 +436,16 @@ function bindGlobalEvents() {
       // Product card -> cart add endpoint.
       event.preventDefault();
       const productId = Number(addToCartButton.dataset.productId || 0);
+      const productName = addToCartButton
+        .closest(".card")
+        ?.querySelector(".card-title")
+        ?.textContent
+        ?.trim();
       if (productId > 0) {
         try {
-          await addToCart(productId);
+          await addToCart(productId, productName || "");
         } catch (error) {
-          alert(error.message);
+          showNotification(error.message, "error");
         }
       }
     }
@@ -303,7 +453,7 @@ function bindGlobalEvents() {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  initCategorySidebar();
+  await initCategorySidebar();
   bindGlobalEvents();
   await refreshAuthState();
 });

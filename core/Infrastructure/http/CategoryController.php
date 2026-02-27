@@ -9,6 +9,8 @@ use Application\Usecases\Category\UpdateCategoryUseCase;
 use Application\Usecases\Category\DeleteCategoryUseCase;
 use Application\Usecases\Category\FindCategoryUseCase;
 use Application\Usecases\Category\ListCategoriesUseCase;
+use Domain\Category\Category;
+use Domain\Shared\Slugger;
 use Infrastructure\Persistence\MySQLCategoryRepository;
 use Infrastructure\Persistence\MySQLProductImageRepository;
 use Infrastructure\Files\ProductImageDeleter;
@@ -20,11 +22,13 @@ class CategoryController
     private DeleteCategoryUseCase $deleteCategoryUseCase;
     private FindCategoryUseCase $findCategoryUseCase;
     private ListCategoriesUseCase $listCategoriesUseCase;
+    private MySQLCategoryRepository $categoryRepo;
 
     public function __construct()
     {
         $pdo = Database::getConnection();
         $categoryRepo = new MySQLCategoryRepository($pdo);
+        $this->categoryRepo = $categoryRepo;
         $imageRepo = new MySQLProductImageRepository($pdo);
         $fileDeleter = new ProductImageDeleter();
 
@@ -41,7 +45,20 @@ class CategoryController
 
     public function view(): array
     {
-        $categories = $this->listCategoriesUseCase->execute();
+        $allCategories = $this->listCategoriesUseCase->execute();
+        $categories = $allCategories;
+        $categoryNameById = [];
+        $rootSlugOrder = ['men' => 0, 'ladies' => 1, 'unisex' => 2];
+        $rootOrderById = [];
+
+        foreach ($allCategories as $categoryItem) {
+            $categoryNameById[$categoryItem->getId()] = $categoryItem->getName();
+
+            $slug = strtolower($categoryItem->getSlug());
+            if (array_key_exists($slug, $rootSlugOrder)) {
+                $rootOrderById[$categoryItem->getId()] = $rootSlugOrder[$slug];
+            }
+        }
 
         // Read filters from query string
         $search = trim($_GET['q'] ?? '');
@@ -70,6 +87,41 @@ class CategoryController
             return true;
         }));
 
+        // Keep parent categories and their subcategories adjacent for readability.
+        usort($categories, function ($a, $b) use ($rootOrderById, $categoryNameById) {
+            $buildSortKey = static function ($category) use ($rootOrderById, $categoryNameById): array {
+                $slug = strtolower($category->getSlug());
+                $id = (int) $category->getId();
+                $parentId = $category->getParentId();
+
+                if (array_key_exists($id, $rootOrderById) || in_array($slug, ['men', 'ladies', 'unisex'], true)) {
+                    $groupOrder = $rootOrderById[$id] ?? 99;
+                    return [$groupOrder, 0, strtolower($category->getName()), ''];
+                }
+
+                $groupOrder = ($parentId !== null && array_key_exists($parentId, $rootOrderById))
+                    ? $rootOrderById[$parentId]
+                    : 99;
+                $parentName = ($parentId !== null && isset($categoryNameById[$parentId]))
+                    ? strtolower($categoryNameById[$parentId])
+                    : 'zzzz';
+
+                return [$groupOrder, 1, $parentName, strtolower($category->getName())];
+            };
+
+            $aKey = $buildSortKey($a);
+            $bKey = $buildSortKey($b);
+
+            for ($i = 0; $i < count($aKey); $i++) {
+                if ($aKey[$i] === $bKey[$i]) {
+                    continue;
+                }
+                return $aKey[$i] <=> $bKey[$i];
+            }
+
+            return 0;
+        });
+
         // Pagination: compute totals and slice the current page
         $total = count($categories);
         $totalPages = (int) ceil($total / $perPage);
@@ -87,6 +139,7 @@ class CategoryController
             'view' => 'categories/view_categories.php',
             'data' => [
                 'categories' => $categories,
+                'categoryNameById' => $categoryNameById,
                 'filters' => [
                     'q' => $search,
                     'status' => $status
@@ -103,18 +156,33 @@ class CategoryController
 
     public function create(): array
     {
+        $collectionRoots = $this->getCollectionRoots();
+
         return [
             'view' => 'categories/insert_category.php',
-            'data' => []
+            'data' => [
+                'collectionRoots' => $collectionRoots
+            ]
         ];
     }
 
     public function store(): void
     {
         try {
+            $name = trim($_POST['name'] ?? '');
+            $rawParentId = (int) ($_POST['parent_id'] ?? 0);
+            $parentId = $this->sanitizeCollectionParentId($rawParentId);
+            if ($rawParentId > 0 && $parentId === null) {
+                throw new \Exception('Invalid collection group selected.');
+            }
+            if (!$this->isCollectionRootSlug(Slugger::fromString($name)) && $parentId === null) {
+                throw new \Exception('Collection group is required for subcategories.');
+            }
+
             $dto = new CreateCategoryDTO(
-                trim($_POST['name'] ?? ''),
-                $_POST['status'] ?? 'active'
+                $name,
+                $_POST['status'] ?? 'active',
+                $parentId
             );
 
             $this->createCategoryUseCase->execute($dto);
@@ -131,6 +199,7 @@ class CategoryController
     {
         $id = (int) ($_GET['id'] ?? 0);
         $category = $this->findCategoryUseCase->execute($id);
+        $collectionRoots = $this->getCollectionRoots();
 
         if (!$category) {
             return [
@@ -142,7 +211,8 @@ class CategoryController
         return [
             'view' => 'categories/edit_categories.php',
             'data' => [
-                'category' => $category
+                'category' => $category,
+                'collectionRoots' => $collectionRoots
             ]
         ];
     }
@@ -155,10 +225,32 @@ class CategoryController
                 throw new \Exception('Invalid category ID.');
             }
 
+            $currentCategory = $this->findCategoryUseCase->execute($id);
+            if (!$currentCategory) {
+                throw new \Exception('Category not found.');
+            }
+            $isCollectionRoot = $this->isCollectionRootSlug($currentCategory->getSlug());
+
+            $rawParentId = (int) ($_POST['parent_id'] ?? 0);
+            $parentId = $this->sanitizeCollectionParentId($rawParentId);
+            if ($rawParentId > 0 && $parentId === null) {
+                throw new \Exception('Invalid collection group selected.');
+            }
+            if ($parentId === $id) {
+                $parentId = null;
+            }
+            if ($isCollectionRoot) {
+                $parentId = null;
+            } elseif ($parentId === null) {
+                throw new \Exception('Collection group is required for subcategories.');
+            }
+            $status = $isCollectionRoot ? 'active' : ($_POST['status'] ?? 'active');
+
             $dto = new UpdateCategoryDTO(
                 $id,
                 trim($_POST['name'] ?? ''),
-                $_POST['status'] ?? 'active'
+                $status,
+                $parentId
             );
 
             $this->updateCategoryUseCase->execute($dto);
@@ -189,5 +281,72 @@ class CategoryController
             echo $e->getMessage();
             return $this->view();
         }
+    }
+
+    private function getCollectionRoots(): array
+    {
+        $definitions = [
+            ['slug' => 'men', 'label' => "Men's Collection"],
+            ['slug' => 'ladies', 'label' => "Ladies' Collection"],
+            ['slug' => 'unisex', 'label' => 'Couples & Unisex'],
+        ];
+
+        $roots = [];
+
+        foreach ($definitions as $definition) {
+            $category = $this->categoryRepo->findBySlug($definition['slug']);
+            if (!$category) {
+                $category = Category::create(
+                    $definition['label'],
+                    $definition['slug'],
+                    null,
+                    'active'
+                );
+                $this->categoryRepo->save($category);
+            } elseif ($category->getStatus() !== 'active') {
+                $category->updateDetails(
+                    $category->getName(),
+                    $category->getSlug(),
+                    $category->getParentId(),
+                    'active'
+                );
+                $this->categoryRepo->save($category);
+            }
+
+            $roots[] = [
+                'id' => (int) $category->getId(),
+                'slug' => $definition['slug'],
+                'label' => $definition['label'],
+            ];
+        }
+
+        return $roots;
+    }
+
+    private function sanitizeCollectionParentId(int $parentId): ?int
+    {
+        if ($parentId <= 0) {
+            return null;
+        }
+
+        $allowedIds = array_map(
+            static fn(array $root): int => (int) $root['id'],
+            $this->getCollectionRoots()
+        );
+
+        if (!in_array($parentId, $allowedIds, true)) {
+            return null;
+        }
+
+        return $parentId;
+    }
+
+    private function isCollectionRootSlug(string $slug): bool
+    {
+        return in_array(
+            strtolower(trim($slug)),
+            ['men', 'ladies', 'unisex'],
+            true
+        );
     }
 }

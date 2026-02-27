@@ -9,6 +9,7 @@ export async function fetchProducts(params = {}) {
 
     const url = new URL('../../shared/api/products.php', import.meta.url);
 
+    if (params.categoryId) url.searchParams.set('category_id', params.categoryId);
     if (params.category) url.searchParams.set('category', params.category);
     if (params.q) url.searchParams.set('q', params.q);
 
@@ -49,8 +50,11 @@ export async function showProducts(params = {}) {
 document.addEventListener("DOMContentLoaded", () => {
     const params = new URLSearchParams(window.location.search);
     const q = params.get("q") || "";
-    if (q) {
-        showProducts({ q });
+    const category = params.get("category") || "";
+    const categoryId = Number(params.get("category_id") || 0);
+
+    if (q || category || categoryId > 0) {
+        showProducts({ q, category, categoryId });
         return;
     }
     showProducts();

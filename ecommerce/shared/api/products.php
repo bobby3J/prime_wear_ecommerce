@@ -10,13 +10,15 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 // Products read endpoint for storefront listing/search.
 // Supports:
 // - q: product name/description search
-// - category: category name filter
+// - category_id: exact category ID filter
+// - category: category name/slug filter (fallback)
 // Returns normalized shape used by product-fetch.js / ProductCard.js.
 try {
     $pdo = Database::getConnection();
 
     $search = trim((string) ($_GET['q'] ?? ''));
     $categoryFilter = trim((string) ($_GET['category'] ?? ''));
+    $categoryIdFilter = (int) ($_GET['category_id'] ?? 0);
 
     $sql = "SELECT
                 p.id,
@@ -38,8 +40,12 @@ try {
             WHERE p.status = 'active'";
 
     $params = [];
-    if ($categoryFilter !== '') {
-        $sql .= " AND c.name LIKE ?";
+    if ($categoryIdFilter > 0) {
+        $sql .= " AND c.id = ?";
+        $params[] = $categoryIdFilter;
+    } elseif ($categoryFilter !== '') {
+        $sql .= " AND (c.name LIKE ? OR c.slug LIKE ?)";
+        $params[] = '%' . $categoryFilter . '%';
         $params[] = '%' . $categoryFilter . '%';
     }
     if ($search !== '') {

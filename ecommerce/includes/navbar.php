@@ -64,7 +64,6 @@ Navigation flow notes:
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item"><a class="nav-link active" href="/ecommerce/index.php?page=home">Home</a></li>
         <li class="nav-item"><a class="nav-link" href="/ecommerce/index.php?page=contact">Contact</a></li>
-        <li class="nav-item"><a class="nav-link" href="/ecommerce/index.php?page=cart">Cart</a></li>
       </ul>
 
       <!-- Center: Search bar -->

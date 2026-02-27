@@ -1,7 +1,7 @@
 <?php include __DIR__ . '/../includes/header.php'; ?>
 <?php include __DIR__ . '/../includes/navbar.php'; ?>
 
-<div class="container-fluid my-4">
+<div class="container-fluid my-4 storefront-main">
   <div class="row">
     <?php include __DIR__ . '/../includes/sidebar.php'; ?>
     <div class="col-md-10">

@@ -23,7 +23,7 @@ class CreateCategoryUseCase
         $category = Category::create(
             name: $dto->name,
             slug: $slug,
-            parent_id: null,
+            parent_id: $dto->parentId,
             status: $dto->status
         );
 

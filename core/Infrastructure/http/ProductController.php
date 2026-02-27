@@ -80,7 +80,17 @@ class ProductController
     public function view(): array
     {
         $products = $this->listProductsViewUseCase->execute();
-        $categories = $this->listCategoriesUseCase->execute();
+        $categories = $this->getProductAssignableCategories();
+        $assignableCategoryIds = array_map(
+            static fn($category): int => (int) $category->getId(),
+            $categories
+        );
+
+        // Products must belong to assignable subcategories, not root categories.
+        $products = array_values(array_filter(
+            $products,
+            static fn($product): bool => in_array((int) $product->categoryId, $assignableCategoryIds, true)
+        ));
 
         // Read filter/sort inputs from the query string
         $search = trim($_GET['q'] ?? '');
@@ -203,7 +213,7 @@ class ProductController
         return [
             'view' => 'products/create_product.php',
             'data' => [
-                'categories' => $this->listCategoriesUseCase->execute()
+                'categories' => $this->getProductAssignableCategories()
             ]
         ];
     }
@@ -223,8 +233,13 @@ class ProductController
             }
 
             // 1. Extract HTTP input
+            $categoryId = (int) ($_POST['category_id'] ?? 0);
+            if (!$this->isAssignableCategoryId($categoryId)) {
+                throw new \Exception('Please select a valid subcategory.');
+            }
+
             $dto = new CreateProductDTO(
-                (int) $_POST['category_id'],
+                $categoryId,
                 trim($_POST['name']),  
                 $_POST['description'] ?? null,
                 (float) $_POST['price'],
@@ -281,7 +296,7 @@ class ProductController
             'data' => [
                 'product' => $product,
                 'imagePath' => $imagePath,
-                'categories' => $this->listCategoriesUseCase->execute()
+                'categories' => $this->getProductAssignableCategories()
             ]
         ];
     }
@@ -298,9 +313,14 @@ class ProductController
                 throw new \Exception('Invalid product ID.');
             }
 
+            $categoryId = (int) ($_POST['category_id'] ?? 0);
+            if (!$this->isAssignableCategoryId($categoryId)) {
+                throw new \Exception('Please select a valid subcategory.');
+            }
+
             $dto = new UpdateProductDTO(
                 $productId,
-                (int) $_POST['category_id'],
+                $categoryId,
                 trim($_POST['name']),
                 $_POST['description'] ?? null,
                 (float) $_POST['price'],
@@ -362,5 +382,40 @@ class ProductController
         }
     }
    
+    private function getProductAssignableCategories(): array
+    {
+        $categories = $this->listCategoriesUseCase->execute();
+
+        return array_values(array_filter(
+            $categories,
+            function ($category): bool {
+                $slug = strtolower($category->getSlug());
+                if (in_array($slug, ['men', 'ladies', 'unisex'], true)) {
+                    return false;
+                }
+
+                if ($category->getStatus() !== 'active') {
+                    return false;
+                }
+
+                return $category->getParentId() !== null;
+            }
+        ));
+    }
+
+    private function isAssignableCategoryId(int $categoryId): bool
+    {
+        if ($categoryId <= 0) {
+            return false;
+        }
+
+        foreach ($this->getProductAssignableCategories() as $category) {
+            if ((int) $category->getId() === $categoryId) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
 }

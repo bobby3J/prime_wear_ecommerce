@@ -128,3 +128,4 @@ To integrate real MoMo/Bank providers:
 2. Replace simulation input logic with a gateway adapter port (application interface).
 3. Infrastructure adapters call provider APIs and return normalized statuses.
 4. Persist gateway response metadata (provider transaction id, response code, webhook state).
+ 

@@ -19,6 +19,38 @@
   -->
   <script type="module" src="/ecommerce/assets/js/script.js"></script>
 
+  <script>
+    (function () {
+      const applyStorefrontMinHeight = function () {
+        const main = document.querySelector('.storefront-main');
+        if (!main) return;
+
+        const topbar = document.querySelector('.topbar');
+        const navbar = document.querySelector('.navbar');
+        const footer = document.querySelector('footer');
+        const mainStyles = window.getComputedStyle(main);
+
+        const topbarHeight = topbar ? topbar.offsetHeight : 0;
+        const navbarHeight = navbar ? navbar.offsetHeight : 0;
+        const footerHeight = footer ? footer.offsetHeight : 0;
+        const verticalSpacing =
+          parseFloat(mainStyles.marginTop || '0') +
+          parseFloat(mainStyles.marginBottom || '0');
+
+        const minHeight = Math.max(
+          0,
+          window.innerHeight - topbarHeight - navbarHeight - footerHeight - verticalSpacing
+        );
+
+        main.style.minHeight = minHeight + 'px';
+      };
+
+      window.addEventListener('load', applyStorefrontMinHeight);
+      window.addEventListener('resize', applyStorefrontMinHeight);
+      document.addEventListener('DOMContentLoaded', applyStorefrontMinHeight);
+    })();
+  </script>
+
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>

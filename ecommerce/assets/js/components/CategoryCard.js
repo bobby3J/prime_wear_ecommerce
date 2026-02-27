@@ -2,15 +2,30 @@
 
 export function renderCategory(category) {
   const items = category.items
-    .map(item => `
+    .map((item) => {
+      const itemLabel = typeof item === "string"
+        ? item
+        : (item.label || item.name || "");
+      const itemValue = typeof item === "string"
+        ? item
+        : (item.value || item.slug || itemLabel);
+      const categoryId = typeof item === "object" && item
+        ? Number(item.categoryId || item.id || 0)
+        : 0;
+      const categoryIdAttr = categoryId > 0
+        ? ` data-category-id="${categoryId}"`
+        : "";
+
+      return `
       <li>
         <a href="#" 
            class="text-dark text-decoration-none category-link"
-           data-category="${encodeURIComponent(item)}">
-          ${item}
+           data-category="${encodeURIComponent(itemValue)}"${categoryIdAttr}>
+          ${itemLabel}
         </a>
       </li>
-    `)
+    `;
+    })
     .join('');
 
   return `

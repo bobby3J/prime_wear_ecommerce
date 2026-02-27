@@ -2,23 +2,21 @@ const API = {
   me: "/ecommerce/shared/api/auth/me.php",
   cartGet: "/ecommerce/shared/api/cart/get.php",
   cartUpdate: "/ecommerce/shared/api/cart/update.php",
-  cartRemove: "/ecommerce/shared/api/cart/remove.php",
-  checkoutConfirm: "/ecommerce/shared/api/checkout/confirm.php",
-  checkoutPay: "/ecommerce/shared/api/checkout/pay.php"
+  cartRemove: "/ecommerce/shared/api/cart/remove.php"
 };
 
 /*
-Cart + Checkout controller.
+Cart page controller.
 Flow:
 1) Ensure authenticated customer.
-2) Load cart snapshot and render.
-3) Require checkout confirmation (name/phone/address) before payment.
-4) Simulated payment creates order/order_items/order_delivery_details/payment.
-5) Refresh cart and sync navbar badge.
+2) Load and render cart snapshot.
+3) Handle update/remove actions.
+4) Continue checkout to dedicated checkout page.
 */
 
 let cartState = null;
-let checkoutConfirmed = false;
+const NOTIFICATION_CONTAINER_ID = "appNotifications";
+const NOTIFICATION_VISIBLE_MS = 2800;
 
 async function fetchJson(url, options = {}) {
   const response = await fetch(url, {
@@ -33,37 +31,57 @@ async function fetchJson(url, options = {}) {
 }
 
 function formatCurrency(value) {
-  return `GH₵${Number(value).toFixed(2)}`;
+  return `GH\u20B5${Number(value).toFixed(2)}`;
 }
 
-function setCheckoutStatus(message, type = "muted") {
-  const target = document.getElementById("checkoutStatus");
-  if (!target) return;
+function getNotificationContainer() {
+  let container = document.getElementById(NOTIFICATION_CONTAINER_ID);
+  if (container) return container;
+
+  container = document.createElement("div");
+  container.id = NOTIFICATION_CONTAINER_ID;
+  container.className = "position-fixed top-0 start-50 translate-middle-x p-3";
+  container.style.zIndex = "2500";
+  container.style.width = "min(92vw, 460px)";
+  container.style.pointerEvents = "none";
+  document.body.appendChild(container);
+  return container;
+}
+
+function showNotification(message, type = "info") {
   const classMap = {
-    muted: "text-muted",
-    success: "text-success",
-    error: "text-danger",
-    info: "text-primary"
+    success: "alert-success",
+    error: "alert-danger",
+    warning: "alert-warning",
+    info: "alert-primary"
   };
-  target.className = classMap[type] || classMap.muted;
-  target.textContent = message;
-}
 
-function togglePaymentControls(enabled) {
-  const method = document.getElementById("checkoutPaymentMethod");
-  const simulate = document.getElementById("checkoutSimulateResult");
-  const txRef = document.getElementById("checkoutTransactionRef");
-  const payBtn = document.getElementById("checkoutPayBtn");
-  [method, simulate, txRef, payBtn].forEach((el) => {
-    if (el) el.disabled = !enabled;
+  const container = getNotificationContainer();
+  const alert = document.createElement("div");
+  alert.className = `alert ${classMap[type] || classMap.info} shadow-sm mb-2 py-2 px-3 d-flex justify-content-between align-items-start`;
+  alert.style.pointerEvents = "auto";
+  alert.role = "alert";
+
+  const messageNode = document.createElement("span");
+  messageNode.className = "me-2";
+  messageNode.textContent = message;
+
+  const closeButton = document.createElement("button");
+  closeButton.type = "button";
+  closeButton.className = "btn-close ms-2 flex-shrink-0";
+  closeButton.setAttribute("aria-label", "Close notification");
+  closeButton.addEventListener("click", () => {
+    alert.remove();
   });
-}
 
-function resetCheckoutConfirmation(reasonMessage = "Confirm details to unlock payment.") {
-  checkoutConfirmed = false;
-  togglePaymentControls(false);
-  const hint = document.getElementById("checkoutConfirmHint");
-  if (hint) hint.textContent = reasonMessage;
+  alert.append(messageNode, closeButton);
+  container.appendChild(alert);
+
+  window.setTimeout(() => {
+    alert.classList.add("fade");
+    alert.style.opacity = "0";
+    window.setTimeout(() => alert.remove(), 180);
+  }, NOTIFICATION_VISIBLE_MS);
 }
 
 function renderCart(cart) {
@@ -114,9 +132,29 @@ function renderCart(cart) {
   }
 
   summary.innerHTML = `
-    <div><strong>Total Items:</strong> ${cart.total_items}</div>
-    <div><strong>Total Quantity:</strong> ${cart.total_quantity}</div>
-    <div><strong>Sub Total:</strong> ${formatCurrency(cart.sub_total)}</div>
+    <div class="row g-2 mb-3">
+      <div class="col-6">
+        <div class="p-3 rounded border bg-light h-100">
+          <div class="small text-muted"><i class="fa-solid fa-box me-1 text-info"></i>Total Items</div>
+          <div class="fs-5 fw-bold">${cart.total_items}</div>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="p-3 rounded border bg-light h-100">
+          <div class="small text-muted"><i class="fa-solid fa-layer-group me-1 text-info"></i>Quantity</div>
+          <div class="fs-5 fw-bold">${cart.total_quantity}</div>
+        </div>
+      </div>
+    </div>
+    <div class="p-3 rounded border bg-light mb-3 d-flex justify-content-between align-items-center">
+      <span class="text-muted"><i class="fa-solid fa-coins me-1 text-warning"></i>Sub Total</span>
+      <strong class="text-dark fs-5">${formatCurrency(cart.sub_total)}</strong>
+    </div>
+    <div class="d-flex justify-content-center">
+      <button class="btn btn-primary px-4" id="cartCheckoutBtn" type="button" ${cart.items.length ? "" : "disabled"}>
+        <i class="fa-solid fa-credit-card me-2"></i>Checkout (${formatCurrency(cart.sub_total)})
+      </button>
+    </div>
   `;
 }
 
@@ -124,11 +162,6 @@ async function loadCart() {
   const data = await fetchJson(API.cartGet, { method: "GET" });
   cartState = data;
   renderCart(data);
-
-  if (!data.items.length) {
-    resetCheckoutConfirmation("Cart is empty. Add products to start checkout.");
-    setCheckoutStatus("", "muted");
-  }
 }
 
 async function ensureAuthenticatedCustomer() {
@@ -140,65 +173,24 @@ async function ensureAuthenticatedCustomer() {
   return true;
 }
 
-async function confirmCheckoutDetails() {
-  const name = document.getElementById("checkoutName")?.value || "";
-  const phone = document.getElementById("checkoutPhone")?.value || "";
-  const streetAddress = document.getElementById("checkoutStreetAddress")?.value || "";
+function showEntryNotifications() {
+  const params = new URLSearchParams(window.location.search);
+  const paid = params.get("paid");
+  const checkout = params.get("checkout");
 
-  if (!cartState || !cartState.items?.length) {
-    throw new Error("Your cart is empty.");
+  if (paid === "1") {
+    showNotification("Payment completed and order created successfully.", "success");
+  }
+  if (checkout === "empty") {
+    showNotification("Your cart is empty. Add products before checkout.", "warning");
   }
 
-  const result = await fetchJson(API.checkoutConfirm, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      name,
-      phone,
-      street_address: streetAddress
-    })
-  });
-
-  checkoutConfirmed = true;
-  togglePaymentControls(true);
-  const hint = document.getElementById("checkoutConfirmHint");
-  if (hint) {
-    hint.textContent = "Details confirmed. You can now proceed with payment.";
+  if (paid || checkout) {
+    const cleanUrl = new URL(window.location.href);
+    cleanUrl.searchParams.delete("paid");
+    cleanUrl.searchParams.delete("checkout");
+    window.history.replaceState({}, "", cleanUrl.toString());
   }
-  setCheckoutStatus("Checkout details confirmed successfully.", "success");
-  return result;
-}
-
-async function payCheckout() {
-  if (!checkoutConfirmed) {
-    throw new Error("Confirm delivery details before payment.");
-  }
-
-  const method = document.getElementById("checkoutPaymentMethod")?.value || "";
-  const simulateResult = document.getElementById("checkoutSimulateResult")?.value || "";
-  const transactionRef = document.getElementById("checkoutTransactionRef")?.value || "";
-
-  const result = await fetchJson(API.checkoutPay, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      method,
-      simulate_result: simulateResult,
-      transaction_ref: transactionRef
-    })
-  });
-
-  const orderNumber = result?.order?.order_number || "N/A";
-  const paymentStatus = result?.payment?.status || "pending";
-
-  setCheckoutStatus(
-    `Payment submitted. Order ${orderNumber} created with payment status: ${paymentStatus}.`,
-    paymentStatus === "failed" ? "error" : "success"
-  );
-
-  await loadCart();
-  resetCheckoutConfirmation("Payment complete. Confirm details again for next checkout.");
-  document.dispatchEvent(new CustomEvent("cart:changed"));
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -207,7 +199,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!ok) return;
 
     await loadCart();
-    resetCheckoutConfirmation("Confirm details to unlock payment.");
+    showEntryNotifications();
   } catch (error) {
     const tableBody = document.getElementById("cartItemsBody");
     if (tableBody) {
@@ -222,7 +214,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 document.addEventListener("click", async (event) => {
   const updateBtn = event.target.closest("[data-update-item]");
-  if (updateBtn) {
+  if (updateBtn) { 
     const itemId = Number(updateBtn.dataset.itemId || 0);
     const input = document.querySelector(`[data-qty-input][data-item-id="${itemId}"]`);
     const quantity = Number(input?.value || 0);
@@ -234,11 +226,10 @@ document.addEventListener("click", async (event) => {
         body: JSON.stringify({ item_id: itemId, quantity })
       });
       await loadCart();
-      resetCheckoutConfirmation("Cart updated. Reconfirm details before payment.");
-      setCheckoutStatus("Cart updated. Please reconfirm delivery details.", "info");
+      showNotification("Cart item updated.", "success");
       document.dispatchEvent(new CustomEvent("cart:changed"));
     } catch (error) {
-      alert(error.message);
+      showNotification(error.message, "error");
     }
     return;
   }
@@ -253,37 +244,20 @@ document.addEventListener("click", async (event) => {
         body: JSON.stringify({ item_id: itemId })
       });
       await loadCart();
-      resetCheckoutConfirmation("Cart changed. Reconfirm details before payment.");
-      setCheckoutStatus("Cart changed. Please reconfirm delivery details.", "info");
+      showNotification("Item removed from cart.", "success");
       document.dispatchEvent(new CustomEvent("cart:changed"));
     } catch (error) {
-      alert(error.message);
+      showNotification(error.message, "error");
     }
     return;
   }
 
-  const confirmBtn = event.target.closest("#checkoutConfirmBtn");
-  if (confirmBtn) {
-    try {
-      confirmBtn.disabled = true;
-      await confirmCheckoutDetails();
-    } catch (error) {
-      setCheckoutStatus(error.message, "error");
-    } finally {
-      confirmBtn.disabled = false;
+  const checkoutBtn = event.target.closest("#cartCheckoutBtn");
+  if (checkoutBtn) {
+    if (!cartState || !Array.isArray(cartState.items) || !cartState.items.length) {
+      showNotification("Your cart is empty. Add products before checkout.", "warning");
+      return;
     }
-    return;
-  }
-
-  const payBtn = event.target.closest("#checkoutPayBtn");
-  if (payBtn) {
-    try {
-      payBtn.disabled = true;
-      await payCheckout();
-    } catch (error) {
-      setCheckoutStatus(error.message, "error");
-    } finally {
-      payBtn.disabled = false;
-    }
+    window.location.href = "/ecommerce/index.php?page=checkout";
   }
 });

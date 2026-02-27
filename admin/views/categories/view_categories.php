@@ -13,6 +13,12 @@ $pagination = $pagination ?? [
     'total_pages' => 1
 ];
 $perPage = (int) ($pagination['per_page'] ?? 10);
+$categoryNameById = $categoryNameById ?? [];
+$collectionRootLabels = [
+    'men' => "Men's Collection",
+    'ladies' => "Ladies' Collection",
+    'unisex' => 'Couples & Unisex',
+];
 ?>
 <?php if ((isset($_GET['created']) && $_GET['created'] == 1) || (isset($_GET['updated']) && $_GET['updated'] == 1)): ?>
     <div class="alert alert-success alert-dismissible fade show">
@@ -158,6 +164,8 @@ $perPage = (int) ($pagination['per_page'] ?? 10);
                 <tr>
                     <th>#</th>
                     <th>Category Name</th>
+                    <th>Parent Category</th>
+                    <th>Type</th>
                     <th>Created At</th>
                     <th>Actions</th>
                     <th>Status</th>
@@ -173,10 +181,36 @@ $perPage = (int) ($pagination['per_page'] ?? 10);
                             'inactive' => 'bg-danger',
                             default => 'bg-secondary'
                         };
+                        $slug = strtolower($category->getSlug());
+                        $isCollectionRoot = array_key_exists($slug, $collectionRootLabels);
+                        $parentId = $category->getParentId();
+
+                        if ($isCollectionRoot) {
+                            $parentLabel = 'Top-level';
+                            $typeLabel = 'Parent Category';
+                            $typeBadgeClass = 'bg-primary';
+                            $displayName = '<span class="fw-semibold">' . htmlspecialchars($category->getName()) . '</span>';
+                        } elseif ($parentId !== null && isset($categoryNameById[$parentId])) {
+                            $parentLabel = $categoryNameById[$parentId];
+                            $typeLabel = 'Subcategory';
+                            $typeBadgeClass = 'bg-info';
+                            $displayName = '<span>' . htmlspecialchars($category->getName()) . '</span>';
+                        } else {
+                            $parentLabel = 'Unassigned';
+                            $typeLabel = 'Unassigned';
+                            $typeBadgeClass = 'bg-secondary';
+                            $displayName = '<span>' . htmlspecialchars($category->getName()) . '</span>';
+                        }
                     ?>
                         <tr>
                             <td><?= $category->getId() ?></td>
-                            <td><?= htmlspecialchars($category->getName()) ?></td>
+                            <td><?= $displayName ?></td>
+                            <td><?= htmlspecialchars($parentLabel) ?></td>
+                            <td>
+                                <span class="badge <?= $typeBadgeClass ?>">
+                                    <?= htmlspecialchars($typeLabel) ?>
+                                </span>
+                            </td>
                             <td><?= htmlspecialchars($category->getCreatedAt()->format('Y-m-d')) ?></td>
                             <td>
                                 <a href="/admin/categories/edit?id=<?= $category->getId() ?>" class="btn btn-sm btn-outline-info me-2">
@@ -194,7 +228,7 @@ $perPage = (int) ($pagination['per_page'] ?? 10);
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="5" class="text-muted">No categories found.</td>
+                        <td colspan="7" class="text-muted">No categories found.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>

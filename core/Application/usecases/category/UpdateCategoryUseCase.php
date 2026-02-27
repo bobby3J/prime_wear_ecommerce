@@ -20,8 +20,14 @@ class UpdateCategoryUseCase
         }
 
         $slug = $category->getSlug();
+        $isSystemRoot = in_array(
+            strtolower($slug),
+            ['men', 'ladies', 'unisex'],
+            true
+        );
 
-        if ($dto->name !== $category->getName()) {
+        // Keep system root slugs stable even if display names change.
+        if (!$isSystemRoot && $dto->name !== $category->getName()) {
             $slug = Slugger::fromString($dto->name);
             $existing = $this->categoryRepository->findBySlug($slug);
             if ($existing && $existing->getId() !== $category->getId()) {
@@ -32,7 +38,7 @@ class UpdateCategoryUseCase
         $category->updateDetails(
             name: $dto->name,
             slug: $slug,
-            parent_id: null,
+            parent_id: $dto->parentId,
             status: $dto->status
         );
 

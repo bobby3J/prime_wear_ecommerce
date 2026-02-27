@@ -3,6 +3,12 @@ if (!isset($category)) {
     echo '<div class="alert alert-danger">Category data missing.</div>';
     return;
 }
+
+$isCollectionRoot = in_array(
+    strtolower($category->getSlug()),
+    ['men', 'ladies', 'unisex'],
+    true
+);
 ?>
 
 <div class="card border-0 shadow-sm">
@@ -19,11 +25,33 @@ if (!isset($category)) {
       </div>
 
       <div class="mb-3">
+        <label for="parent_id" class="form-label">Collection Group</label>
+        <?php if ($isCollectionRoot): ?>
+          <input type="text" class="form-control" value="Top-level parent category" readonly>
+          <input type="hidden" name="parent_id" value="">
+        <?php else: ?>
+          <select name="parent_id" id="parent_id" class="form-select" required>
+            <option value="">Select collection group</option>
+            <?php foreach (($collectionRoots ?? []) as $root): ?>
+              <option value="<?= (int) $root['id']; ?>" <?= (int) $category->getParentId() === (int) $root['id'] ? 'selected' : ''; ?>>
+                <?= htmlspecialchars($root['label']); ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+        <?php endif; ?>
+      </div>
+
+      <div class="mb-3">
         <label for="status" class="form-label">Status</label>
-        <select name="status" id="status" class="form-select">
-          <option value="active" <?= $category->getStatus() === 'active' ? 'selected' : ''; ?>>Active</option>
-          <option value="inactive" <?= $category->getStatus() === 'inactive' ? 'selected' : ''; ?>>Inactive</option>
-        </select>
+        <?php if ($isCollectionRoot): ?>
+          <input type="text" class="form-control" value="Active (required for collection roots)" readonly>
+          <input type="hidden" name="status" value="active">
+        <?php else: ?>
+          <select name="status" id="status" class="form-select">
+            <option value="active" <?= $category->getStatus() === 'active' ? 'selected' : ''; ?>>Active</option>
+            <option value="inactive" <?= $category->getStatus() === 'inactive' ? 'selected' : ''; ?>>Inactive</option>
+          </select>
+        <?php endif; ?>
       </div>
 
       <div class="text-center">

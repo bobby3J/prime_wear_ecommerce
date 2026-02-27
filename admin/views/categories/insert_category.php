@@ -10,6 +10,18 @@
       </div>
 
       <div class="mb-3">
+        <label for="parent_id" class="form-label">Collection Group</label>
+        <select name="parent_id" id="parent_id" class="form-select" required>
+          <option value="">Select collection group</option>
+          <?php foreach (($collectionRoots ?? []) as $root): ?>
+            <option value="<?= (int) $root['id']; ?>">
+              <?= htmlspecialchars($root['label']); ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+
+      <div class="mb-3">
         <label for="status" class="form-label">Status</label>
         <select name="status" id="status" class="form-select">
           <option value="active" selected>Active</option>
