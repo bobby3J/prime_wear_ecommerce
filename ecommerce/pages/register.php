@@ -45,14 +45,14 @@ Submit is intercepted in script.js and sent to /shared/api/auth/register.php.
 <style>
   .btn-gold {
     background-color: #C8A951;
-    color: #222;
+    color: #fff;
     border: none;
     padding: 0.45rem 1rem;
     font-size: 0.95rem;
   }
   .btn-gold:hover {
     background-color: #a18945ff;
-    color: #111010ff;
+    color: #fff;
   }
   .text-gold {
     color: #FFD700;

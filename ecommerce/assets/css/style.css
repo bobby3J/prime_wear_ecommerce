@@ -5,6 +5,15 @@
     box-sizing: border-box;
 }
 
+:root {
+  --prime-gold: #c8a951;
+  --prime-gold-light: #d7ba67;
+  --prime-gold-dark: #9f7b23;
+  --prime-gold-deep: #7d611b;
+  --prime-gold-soft-bg: #f5ecd1;
+  --enterprise-ink: #1f2937;
+}
+
 .logo {
   width: 70px;
   height: auto;
@@ -21,7 +30,7 @@
 }
 /* Gold tone for branding */
 .text-gold {
-  color: #C8A951 !important;
+  color: var(--prime-gold) !important;
 }
 
 /* Topbar background and alignment */
@@ -52,22 +61,57 @@
 }
 
 .bg-gold {
-  background: linear-gradient(90deg, #C8A951, #d4af37, #b8860b);
+  background: linear-gradient(90deg, #c6a448, #b79233, #a4812a);
   color: white !important;
 }
 
 
 .btn-gold {
-  background-color: #d4af37; /* gold color */
-  border-color: #d4af37;
+  background-color: var(--prime-gold); /* gold color */
+  border-color: var(--prime-gold);
   color: white;
   transition: 0.3s ease;
 }
 
 .btn-gold:hover {
-  background-color: #b89625;
-  border-color: #7e6d33;
-  color: rgb(99, 10, 10);
+  background-color: var(--prime-gold-dark);
+  border-color: var(--prime-gold-deep);
+  color: #fff;
+}
+
+.btn-gold-soft,
+.btn-outline-gold {
+  background-color: transparent;
+  border-color: var(--prime-gold-dark);
+  color: var(--prime-gold-dark);
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-gold-soft:hover,
+.btn-gold-soft:focus,
+.btn-outline-gold:hover,
+.btn-outline-gold:focus {
+  background-color: var(--prime-gold);
+  border-color: var(--prime-gold-dark);
+  color: #fff;
+}
+
+.btn-gold-soft:active,
+.btn-outline-gold:active {
+  background-color: var(--prime-gold-dark) !important;
+  border-color: var(--prime-gold-deep) !important;
+  color: #fff !important;
+}
+
+.product-title-enterprise {
+  color: var(--enterprise-ink);
+  font-weight: 600;
+}
+
+.footer-gold {
+  background-color: #b58c31;
+  color: #fff;
+  border-top: 1px solid #9c7624;
 }
 
 
@@ -238,6 +282,118 @@
 
 /* Label alignment and icon spacing */
 
+/* Payment page */
+.payment-shell .payment-title {
+  color: var(--enterprise-ink);
+  font-weight: 700;
+}
+
+.payment-shell .payment-title i {
+  color: var(--prime-gold-dark);
+}
+
+.payment-intro {
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  background: #fafafa;
+  color: #4b5563;
+}
+
+.payment-card {
+  border: 1px solid #ececec !important;
+  border-radius: 12px;
+}
+
+.payment-shell .row {
+  align-items: flex-start;
+}
+
+/* Reset global card/column flex rules for payment page layout stability. */
+.payment-shell .card {
+  height: auto;
+}
+
+.payment-shell .card-body {
+  display: block;
+}
+
+.payment-shell .col-lg-4,
+.payment-shell .col-md-4,
+.payment-shell .col-md-6 {
+  display: block;
+}
+
+.payment-card:hover {
+  transform: none;
+}
+
+.payment-section-title {
+  color: var(--enterprise-ink);
+  font-weight: 600;
+}
+
+.payment-section-title i {
+  color: var(--prime-gold-dark);
+}
+
+.payment-items-table thead th {
+  color: #4b5563;
+  font-weight: 600;
+}
+
+.payment-summary-grid .payment-metric-label {
+  letter-spacing: 0.01em;
+}
+
+.payment-summary-grid .payment-metric-value {
+  color: #111827;
+}
+
+.payment-provider-row {
+  align-items: center;
+}
+
+.payment-provider-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.35rem 0.6rem;
+  background: #f9fafb;
+  color: #374151;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1;
+  transition: all 0.2s ease;
+}
+
+.payment-provider-chip:hover {
+  border-color: #d4af37;
+  background: #fffaf0;
+}
+
+.payment-provider-chip.is-active {
+  border-color: var(--prime-gold);
+  background: var(--prime-gold-soft-bg);
+  color: var(--prime-gold-deep);
+  box-shadow: 0 0 0 1px rgba(159, 123, 35, 0.15) inset;
+}
+
+.payment-provider-chip-img {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.payment-provider-chip i {
+  color: var(--prime-gold-dark);
+  font-size: 0.9rem;
+}
 
 
 /* Footer */

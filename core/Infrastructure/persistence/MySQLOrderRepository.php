@@ -79,6 +79,45 @@ class MySQLOrderRepository implements OrderRepositoryInterface
         ]);
     }
 
+    public function reduceStockForOrderItems(array $items): void
+    {
+        $decrement = $this->pdo->prepare(
+            "UPDATE products
+             SET stock = stock - ?
+             WHERE id = ?
+               AND stock >= ?"
+        );
+
+        foreach ($items as $item) {
+            if (!$item instanceof OrderItem) {
+                throw new \InvalidArgumentException(
+                    'Order items must be instances of Domain\\Order\\OrderItem.'
+                );
+            }
+
+            $quantity = $item->getQuantity();
+            $decrement->execute([
+                $quantity,
+                $item->getProductId(),
+                $quantity,
+            ]);
+
+            if ($decrement->rowCount() !== 1) {
+                throw new \RuntimeException(
+                    'Checkout blocked: one or more products do not have enough stock.'
+                );
+            }
+        }
+
+        // Keep product status in sync when stock reaches zero after checkout.
+        $this->pdo->exec(
+            "UPDATE products
+             SET status = 'out_of_stock'
+             WHERE stock <= 0
+               AND status = 'active'"
+        );
+    }
+
     public function markAsPaid(int $orderId): void
     {
         $update = $this->pdo->prepare("UPDATE orders SET status = 'paid' WHERE id = ?");
@@ -201,7 +240,7 @@ class MySQLOrderRepository implements OrderRepositoryInterface
         $items = $itemsStmt->fetchAll(PDO::FETCH_ASSOC);
 
         $paymentsStmt = $this->pdo->prepare(
-            "SELECT id, method, status, transaction_ref, amount, created_at
+            "SELECT id, method, provider, status, transaction_ref, amount, created_at
              FROM payments
              WHERE order_id = ?
              ORDER BY id DESC"
@@ -214,5 +253,38 @@ class MySQLOrderRepository implements OrderRepositoryInterface
             'items' => $items,
             'payments' => $payments,
         ];
+    }
+
+    /**
+     * Returns persisted order item snapshots for payment-finalization stock updates.
+     *
+     * @return OrderItem[]
+     */
+    public function fetchOrderItems(int $orderId): array
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT product_id, quantity, price_at_purchase
+             FROM order_items
+             WHERE order_id = ?"
+        );
+        $stmt->execute([$orderId]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return array_map(
+            static fn(array $row) => new OrderItem(
+                productId: (int) ($row['product_id'] ?? 0),
+                quantity: (int) ($row['quantity'] ?? 0),
+                priceAtPurchase: (float) ($row['price_at_purchase'] ?? 0)
+            ),
+            $rows
+        );
+    }
+
+    public function isOrderPaid(int $orderId): bool
+    {
+        $stmt = $this->pdo->prepare("SELECT status FROM orders WHERE id = ? LIMIT 1");
+        $stmt->execute([$orderId]);
+        $status = (string) ($stmt->fetchColumn() ?: '');
+        return strtolower($status) === 'paid';
     }
 }

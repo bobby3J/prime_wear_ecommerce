@@ -1,4 +1,6 @@
 <?php
+use Infrastructure\Support\PaymentLabelMapper;
+
 /**
  * Admin Order Detail View
  * -----------------------
@@ -186,10 +188,12 @@ $formatDateTime = static function ($value): string {
                   'failed' => 'bg-danger',
                   default => 'bg-warning text-dark'
               };
+              $methodSource = (string) ($payment['provider'] ?? $payment['method'] ?? '');
+              $methodLabel = PaymentLabelMapper::paymentMethod($methodSource);
               ?>
               <tr>
                 <td><?= $index + 1 ?></td>
-                <td><?= htmlspecialchars((string) ($payment['method'] ?? '-')) ?></td>
+                <td><?= htmlspecialchars($methodLabel) ?></td>
                 <td><span class="badge <?= $pBadge ?>"><?= htmlspecialchars(ucfirst($pStatus)) ?></span></td>
                 <td>GH&#8373;<?= number_format((float) ($payment['amount'] ?? 0), 2) ?></td>
                 <td class="text-break"><?= htmlspecialchars((string) ($payment['transaction_ref'] ?? '-')) ?></td>

@@ -4,8 +4,10 @@
  * ---------------------------
  * Read-only payment monitoring screen with filter/search controls.
  */
+use Infrastructure\Support\PaymentLabelMapper;
+
 $payments = $payments ?? [];
-$filters = $filters ?? ['q' => '', 'status' => '', 'method' => ''];
+$filters = $filters ?? ['q' => '', 'status' => '', 'method' => '', 'provider' => ''];
 $pagination = $pagination ?? ['page' => 1, 'per_page' => 10, 'total' => 0, 'total_pages' => 1];
 
 $page = (int) ($pagination['page'] ?? 1);
@@ -19,6 +21,7 @@ $queryBase = array_filter([
     'q' => $filters['q'] !== '' ? $filters['q'] : null,
     'status' => $filters['status'] !== '' ? $filters['status'] : null,
     'method' => $filters['method'] !== '' ? $filters['method'] : null,
+    'provider' => $filters['provider'] !== '' ? $filters['provider'] : null,
     'per_page' => $perPage !== 10 ? $perPage : null,
 ], static fn($v) => $v !== null && $v !== '');
 ?>
@@ -48,9 +51,18 @@ $queryBase = array_filter([
       <div class="col-md-2">
         <select name="method" class="form-select">
           <option value="">All methods</option>
-          <option value="mobile money" <?= $filters['method'] === 'mobile money' ? 'selected' : '' ?>>Mobile Money</option>
-          <option value="card" <?= $filters['method'] === 'card' ? 'selected' : '' ?>>Card / Bank</option>
+          <option value="mobile money" <?= $filters['method'] === 'mobile money' ? 'selected' : '' ?>>MTN MoMo</option>
+          <option value="bank" <?= $filters['method'] === 'bank' ? 'selected' : '' ?>>Bank</option>
+          <option value="card" <?= $filters['method'] === 'card' ? 'selected' : '' ?>>Bank (Legacy)</option>
           <option value="cash on delivery" <?= $filters['method'] === 'cash on delivery' ? 'selected' : '' ?>>Cash On Delivery</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <select name="provider" class="form-select">
+          <option value="">All providers</option>
+          <option value="mtn_momo" <?= $filters['provider'] === 'mtn_momo' ? 'selected' : '' ?>>MTN MoMo</option>
+          <option value="telecel_cash" <?= $filters['provider'] === 'telecel_cash' ? 'selected' : '' ?>>Telecel Cash</option>
+          <option value="bank" <?= $filters['provider'] === 'bank' ? 'selected' : '' ?>>Bank</option>
         </select>
       </div>
       <div class="col-md-2">
@@ -95,6 +107,8 @@ $queryBase = array_filter([
                 'failed' => 'bg-danger',
                 default => 'bg-warning text-dark'
             };
+            $methodSource = (string) ($payment['provider'] ?? $payment['method'] ?? '');
+            $methodLabel = PaymentLabelMapper::paymentMethod($methodSource);
             ?>
             <tr>
               <td><?= (int) $payment['id'] ?></td>
@@ -109,7 +123,7 @@ $queryBase = array_filter([
                 <small class="text-muted"><?= htmlspecialchars((string) ($payment['customer_email'] ?? '')) ?></small>
               </td>
               <td>GH₵<?= number_format((float) $payment['amount'], 2) ?></td>
-              <td><?= htmlspecialchars((string) $payment['method']) ?></td>
+              <td><?= htmlspecialchars($methodLabel) ?></td>
               <td><span class="badge <?= $badgeClass ?>"><?= htmlspecialchars(ucfirst($status)) ?></span></td>
               <td><?= htmlspecialchars((string) ($payment['transaction_ref'] ?? '-')) ?></td>
               <td><?= htmlspecialchars((string) ($payment['created_at'] ?? '')) ?></td>

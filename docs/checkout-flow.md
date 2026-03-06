@@ -1,5 +1,11 @@
 # Checkout, Orders, Payments Flow (DDD-Oriented)
 
+## Related Docs
+- Frontend API request helper pattern: `docs/frontend-request-helper.md`
+- Legacy simulated payment flow (historical reference): `docs/payment-simulated-flow.md`
+- Real payment integration blueprint (secure MTN MoMo/Telecel/Bank): `docs/payment-real-integration-blueprint.md`
+- Phase 1 operations and webhook examples: `docs/payment-phase1-operational-guide.md`
+
 ## Overview
 This project now uses a cleaner split for checkout:
 
@@ -24,7 +30,7 @@ Behavior:
    - cart signature hash
    - expiry (TTL)
 
-### Step 2: Simulated Payment + Order Creation
+### Step 2: Payment Initiation + Order Creation
 Endpoint: `POST /ecommerce/shared/api/checkout/pay.php`
 
 Controller: `core/Infrastructure/http/CheckoutController.php` -> `PayCheckoutUseCase`
@@ -32,29 +38,43 @@ Controller: `core/Infrastructure/http/CheckoutController.php` -> `PayCheckoutUse
 Behavior (single transaction):
 1. Reads confirmation payload from session.
 2. Reloads cart and re-validates against signature.
-3. Creates `orders` row.
-4. Creates `order_items` rows (line item snapshots).
-5. Creates `order_delivery_details` row.
-6. Creates `payments` row.
-7. Marks order `paid` only when simulated status is `successful`.
-8. Clears cart items.
-9. Clears checkout confirmation session state.
+3. For mobile money methods, validates `payer_phone` for customer prompt flow.
+4. Creates `orders` row.
+5. Creates `order_items` rows (line item snapshots).
+6. Creates `order_delivery_details` row.
+7. Creates `payments` row in `pending` status for provider-backed methods.
+8. Persists provider metadata (`provider`, `provider_txn_id`, `idempotency_key`, `raw_status`) when available.
+9. Clears cart items.
+10. Clears checkout confirmation session state.
 
-## Simulation Rules
+## Payment Rules (Phase 1)
 Supported checkout methods:
-1. `momo`
-2. `bank`
-3. `cash_on_delivery`
-
-Supported simulation statuses via `simulate_result`:
-1. `successful`
-2. `pending`
-3. `failed`
+1. `mtn_momo`
+2. `telecel_cash`
+3. `bank`
+4. `cash_on_delivery`
 
 Rules:
-1. For `cash_on_delivery`, payment is forced to `pending`.
-2. For `momo`/`bank`, default is `successful` if `simulate_result` is omitted.
-3. `bank` currently maps to `payments.method = 'card'` because current DB enum has no `bank` value yet.
+1. `mtn_momo`, `telecel_cash`, and `bank` initiate payment and stay `pending` until webhook confirmation.
+2. Stock is reduced only after webhook confirms `successful`.
+3. Order is marked `paid` only after webhook confirms `successful`.
+4. `cash_on_delivery` stays `pending` and returns a customer notice to pay at delivery.
+
+## Webhook Finalization
+Endpoint: `POST /ecommerce/shared/api/payments/webhook.php?provider={provider}`
+
+Supported providers:
+1. `mtn_momo`
+2. `telecel_cash`
+3. `bank`
+
+Behavior:
+1. Verifies signature and timestamp.
+2. Records immutable webhook event in `payment_events`.
+3. Applies idempotent status update on `payments`.
+4. On `successful`:
+   - reduces stock from persisted `order_items` snapshot
+   - marks order as `paid`
 
 ## Admin Read Flow
 
@@ -123,9 +143,9 @@ List page includes:
 7. `admin/views/payments/payments.php`
 
 ## Upgrading to Real Payment Gateways Later
-To integrate real MoMo/Bank providers:
-1. Keep `PayCheckoutUseCase` orchestration unchanged.
-2. Replace simulation input logic with a gateway adapter port (application interface).
-3. Infrastructure adapters call provider APIs and return normalized statuses.
-4. Persist gateway response metadata (provider transaction id, response code, webhook state).
+Gateway integration scaffold is now in place:
+1. Provider initiation client: `core/Infrastructure/Payments/ProviderGatewayClient.php`
+2. Webhook use case: `core/Application/usecases/Payment/HandleGatewayWebhookUseCase.php`
+3. Webhook controller: `core/Infrastructure/http/GatewayWebhookController.php`
+4. Webhook API endpoint: `ecommerce/shared/api/payments/webhook.php`
  

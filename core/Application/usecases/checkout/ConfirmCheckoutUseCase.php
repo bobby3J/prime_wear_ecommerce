@@ -60,7 +60,7 @@ class ConfirmCheckoutUseCase
                 'total_quantity' => $cart->totalQuantity(),
                 'sub_total' => $cart->subTotal(),
             ],
-            'allowed_payment_methods' => ['momo', 'bank', 'cash_on_delivery'],
+            'allowed_payment_methods' => ['mtn_momo', 'telecel_cash', 'bank', 'cash_on_delivery'],
         ];
     }
 

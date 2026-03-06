@@ -48,13 +48,43 @@ const NOTIFICATION_CONTAINER_ID = "appNotifications";
 const NOTIFICATION_VISIBLE_MS = 2800;
 
 async function fetchJson(url, options = {}) {
-  // Shared fetch helper used by auth/cart flows.
-  const response = await fetch(url, {
+  // Single request helper for storefront v1:
+  // - keeps credentials behavior in one place
+  // - auto-handles JSON body + Content-Type
+  // - keeps call sites focused on endpoint + payload
+  const {
+    method = "GET",
+    headers = {},
+    body,
+    ...rest
+  } = options;
+
+  const requestOptions = {
     credentials: "same-origin",
-    ...options
-  });
+    method,
+    headers: { ...headers },
+    ...rest
+  };
+
+  if (typeof body !== "undefined") {
+    if (body instanceof FormData) {
+      requestOptions.body = body;
+    } else if (typeof body === "string") {
+      requestOptions.body = body;
+      if (!requestOptions.headers["Content-Type"]) {
+        requestOptions.headers["Content-Type"] = "application/json";
+      }
+    } else {
+      requestOptions.body = JSON.stringify(body);
+      if (!requestOptions.headers["Content-Type"]) {
+        requestOptions.headers["Content-Type"] = "application/json";
+      }
+    }
+  }
+
+  const response = await fetch(url, requestOptions);
   const json = await response.json();
-  if (!json.success) {
+  if (!response.ok || !json.success) {
     throw new Error(json.message || "Request failed.");
   }
   return json.data;
@@ -217,8 +247,7 @@ async function submitLogin(form) {
   try {
     await fetchJson(API.login, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password })
+      body: { email, password }
     });
     await refreshAuthState();
     hideLoginModal();
@@ -241,8 +270,7 @@ async function submitRegister(form) {
   try {
     await fetchJson(API.register, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password })
+      body: { name, email, password }
     });
     await refreshAuthState();
     hideLoginModal();
@@ -366,11 +394,10 @@ async function addToCart(productId, productName = "") {
 
   await fetchJson(API.cartAdd, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
+    body: {
       product_id: productId,
       quantity: 1
-    })
+    }
   });
 
   await refreshCartCount();

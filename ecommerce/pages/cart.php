@@ -68,7 +68,7 @@ Cart page flow:
           </div>
 
           <div class="d-flex justify-content-center">
-            <button class="btn btn-primary px-4" id="cartCheckoutBtn" type="button" disabled>
+            <button class="btn btn-gold-soft px-4" id="cartCheckoutBtn" type="button" disabled>
               <i class="fa-solid fa-credit-card me-2"></i>Checkout (GH&#8373;0.00)
             </button>
           </div>

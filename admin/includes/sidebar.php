@@ -1,3 +1,7 @@
+<?php
+$adminName = \Infrastructure\Auth\SessionAuth::adminName() ?? 'Admin';
+$isSuperadmin = \Infrastructure\Auth\SessionAuth::isSuperadmin();
+?>
 <div class="sidebar">
   <button
     id="sidebarToggle"
@@ -10,7 +14,7 @@
     <i class="fa-solid fa-angles-left"></i>
   </button>
   <img src="/admin/assets/images/sneaker1.jpg" alt="Admin">
-  <h5 class="sidebar-title">Admin Name</h5>
+  <h5 class="sidebar-title"><?= htmlspecialchars($adminName) ?></h5>
 
   <a href="/admin/dashboard" class="btn" title="Dashboard">
     <i class="fa fa-tachometer-alt"></i>
@@ -32,6 +36,14 @@
     <i class="fa fa-list"></i>
     <span class="menu-label">View Categories</span>
   </a>
+
+  <?php if ($isSuperadmin): ?>
+    <a href="/admin/users/view" class="btn" title="Users">
+      <i class="fa fa-user-shield"></i>
+      <span class="menu-label">Users</span>
+    </a>
+  <?php endif; ?>
+
   <a href="/admin/customers/view" class="btn" title="Customers">
     <i class="fa fa-users"></i>
     <span class="menu-label">Customers</span>
@@ -49,5 +61,3 @@
     <span class="menu-label">All Payments</span>
   </a>
 </div>
-
-

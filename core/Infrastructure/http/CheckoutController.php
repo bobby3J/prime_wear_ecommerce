@@ -5,6 +5,7 @@ use Application\Usecases\Checkout\ConfirmCheckoutUseCase;
 use Application\Usecases\Checkout\PayCheckoutUseCase;
 use Core\Infrastructure\Persistence\Database;
 use Infrastructure\Auth\SessionCheckoutConfirmationStore;
+use Infrastructure\Payments\ProviderGatewayClient;
 use Infrastructure\Persistence\MySQLCartRepository;
 use Infrastructure\Persistence\MySQLCustomerRepository;
 use Infrastructure\Persistence\MySQLOrderRepository;
@@ -23,6 +24,7 @@ class CheckoutController
     private PayCheckoutUseCase $payCheckoutUseCase;
     private MySQLCartRepository $cartRepository;
     private SessionCheckoutConfirmationStore $confirmationStore;
+    private ProviderGatewayClient $gatewayClient;
 
     public function __construct()
     {
@@ -34,8 +36,10 @@ class CheckoutController
         $paymentRepository = new MySQLPaymentRepository($pdo);
         $confirmationStore = new SessionCheckoutConfirmationStore();
         $transactionManager = new PdoTransactionManager();
+        $gatewayClient = new ProviderGatewayClient();
         $this->cartRepository = $cartRepository;
         $this->confirmationStore = $confirmationStore;
+        $this->gatewayClient = $gatewayClient;
 
         $this->confirmCheckoutUseCase = new ConfirmCheckoutUseCase(
             customerRepository: $customerRepository,
@@ -48,7 +52,8 @@ class CheckoutController
             orderRepository: $orderRepository,
             paymentRepository: $paymentRepository,
             confirmationStore: $confirmationStore,
-            transactionManager: $transactionManager
+            transactionManager: $transactionManager,
+            gatewayClient: $gatewayClient
         );
     }
 
@@ -68,7 +73,8 @@ class CheckoutController
             customerId: $customerId,
             methodInput: (string) ($input['method'] ?? ''),
             transactionRef: (string) ($input['transaction_ref'] ?? ''),
-            simulateResult: (string) ($input['simulate_result'] ?? '')
+            legacySimulateResult: (string) ($input['simulate_result'] ?? ''),
+            payerPhone: (string) ($input['payer_phone'] ?? '')
         );
     }
 
@@ -94,7 +100,8 @@ class CheckoutController
                 'total_quantity' => $cart->totalQuantity(),
                 'sub_total' => $cart->subTotal(),
             ],
-            'allowed_payment_methods' => ['momo', 'bank', 'cash_on_delivery'],
+            'allowed_payment_methods' => ['mtn_momo', 'telecel_cash', 'bank', 'cash_on_delivery'],
+            'collection_destinations' => $this->gatewayClient->collectionDestinations(),
         ];
     }
 }

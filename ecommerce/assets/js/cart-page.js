@@ -118,7 +118,7 @@ function renderCart(cart) {
         </td>
         <td>${formatCurrency(item.line_total)}</td>
         <td>
-          <button class="btn btn-sm btn-outline-primary" data-update-item data-item-id="${item.id}">
+          <button class="btn btn-sm btn-gold-soft" data-update-item data-item-id="${item.id}">
             Update
           </button>
         </td>
@@ -151,7 +151,7 @@ function renderCart(cart) {
       <strong class="text-dark fs-5">${formatCurrency(cart.sub_total)}</strong>
     </div>
     <div class="d-flex justify-content-center">
-      <button class="btn btn-primary px-4" id="cartCheckoutBtn" type="button" ${cart.items.length ? "" : "disabled"}>
+      <button class="btn btn-gold-soft px-4" id="cartCheckoutBtn" type="button" ${cart.items.length ? "" : "disabled"}>
         <i class="fa-solid fa-credit-card me-2"></i>Checkout (${formatCurrency(cart.sub_total)})
       </button>
     </div>

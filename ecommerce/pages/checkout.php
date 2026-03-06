@@ -74,10 +74,10 @@ Checkout page flow:
           </div>
 
           <div class="d-grid gap-2">
-            <button class="btn btn-outline-primary" id="checkoutReviewBtn" type="button">
+            <button class="btn btn-gold-soft" id="checkoutReviewBtn" type="button">
               Review Order Summary
             </button>
-            <a class="btn btn-outline-primary d-none" id="checkoutToPaymentBtn" href="/ecommerce/index.php?page=payment">
+            <a class="btn btn-gold-soft d-none" id="checkoutToPaymentBtn" href="/ecommerce/index.php?page=payment">
               Continue to Payment
             </a>
           </div>
@@ -142,7 +142,7 @@ Checkout page flow:
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Back to Edit</button>
-        <button type="button" class="btn btn-primary" id="checkoutModalConfirmBtn">Confirm & Continue to Payment</button>
+        <button type="button" class="btn btn-gold-soft" id="checkoutModalConfirmBtn">Confirm & Continue to Payment</button>
       </div>
     </div>
   </div>

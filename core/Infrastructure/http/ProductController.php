@@ -376,9 +376,9 @@ class ProductController
             $result['data']['deleted'] = true;
             return $result;
         } catch (\Throwable $e) {
-            http_response_code(400);
-            echo $e->getMessage();
-            return $this->view();
+            $result = $this->view();
+            $result['data']['deleteError'] = $e->getMessage();
+            return $result;
         }
     }
    

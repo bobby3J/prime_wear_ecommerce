@@ -41,6 +41,13 @@ if ((isset($_GET['created']) && $_GET['created'] == 1) || (isset($_GET['success'
     </div>
 <?php endif; ?>
 
+<?php if (!empty($deleteError)): ?>
+    <div class="alert alert-danger alert-dismissible fade show">
+        <?= htmlspecialchars((string) $deleteError) ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
 <div class="card border-0 shadow-sm">
     <div class="card-body">
         <h3 class="text-center mb-4 text-info fw-bold">View All Products</h3>

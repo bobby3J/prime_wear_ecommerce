@@ -3,7 +3,8 @@ namespace Domain\Payment;
 
 class PaymentMethod
 {
-    public const MOMO = 'momo';
+    public const MTN_MOMO = 'mtn_momo';
+    public const TELECEL_CASH = 'telecel_cash';
     public const BANK = 'bank';
     public const CASH_ON_DELIVERY = 'cash_on_delivery';
 
@@ -11,7 +12,8 @@ class PaymentMethod
     {
         $normalized = strtolower(trim($method));
         return match ($normalized) {
-            'momo' => self::MOMO,
+            'momo', 'mtn_momo', 'mtn momo' => self::MTN_MOMO,
+            'telecel_cash', 'telecel cash', 'vodafone', 'vodafone_cash' => self::TELECEL_CASH,
             'bank' => self::BANK,
             'cash_on_delivery', 'cod', 'cash on delivery' => self::CASH_ON_DELIVERY,
             default => '',
@@ -20,6 +22,6 @@ class PaymentMethod
 
     public static function isValid(string $method): bool
     {
-        return in_array($method, [self::MOMO, self::BANK, self::CASH_ON_DELIVERY], true);
+        return in_array($method, [self::MTN_MOMO, self::TELECEL_CASH, self::BANK, self::CASH_ON_DELIVERY], true);
     }
 }

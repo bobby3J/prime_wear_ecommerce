@@ -1,5 +1,5 @@
 <!-- Footer -->
-  <footer class="bg-info text-center text-white py-2 mt-3">
+  <footer class="footer-gold text-center text-white py-2 mt-3">
     <p class="mb-0">&copy; 2025 YourCompanyName. All rights reserved.</p>
   </footer>
 

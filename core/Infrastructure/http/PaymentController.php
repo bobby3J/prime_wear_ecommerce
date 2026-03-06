@@ -18,6 +18,7 @@ class PaymentController
             'q' => trim((string) ($_GET['q'] ?? '')),
             'status' => trim((string) ($_GET['status'] ?? '')),
             'method' => trim((string) ($_GET['method'] ?? '')),
+            'provider' => trim((string) ($_GET['provider'] ?? '')),
         ];
 
         $perPage = (int) ($_GET['per_page'] ?? 10);
